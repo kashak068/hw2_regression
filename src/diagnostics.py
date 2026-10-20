@@ -85,7 +85,9 @@ def run_regression_assumptions_tests(
 
     fitted_vals = ols_res.fittedvalues
     residuals = ols_res.resid
-    std_residuals = ols_res.get_influence().resid_studentized_internal
+    # 大樣本下標準化殘差極速計算
+    resid_std = np.std(residuals)
+    std_residuals = residuals / (resid_std if resid_std > 0 else 1.0)
 
     # --- 假設 1: 線性關係 (Linearity) ---
     # 檢驗殘差均值是否趨近於 0
@@ -101,8 +103,12 @@ def run_regression_assumptions_tests(
     print(f"2. 殘差常態性 (Normality)       : Shapiro-Wilk p-value = {shapiro_p:.4f}, 偏態 = {skewness:.3f}, 峰度 = {kurt:.3f}")
 
     # --- 假設 3: 殘差同變異性 (Homoscedasticity) ---
-    # Breusch-Pagan 檢定
-    bp_test = het_breuschpagan(residuals, X_const)
+    # Breusch-Pagan 檢定 (若樣本數極大則取樣 50,000 進行檢定)
+    if len(residuals) > 50000:
+        bp_sample_idx = residuals.sample(50000, random_state=42).index
+        bp_test = het_breuschpagan(residuals.loc[bp_sample_idx], X_const.loc[bp_sample_idx])
+    else:
+        bp_test = het_breuschpagan(residuals, X_const)
     bp_stat, bp_p = bp_test[0], bp_test[1]
     print(f"3. 殘差同變異性 (Homoscedasticity): Breusch-Pagan LM stat = {bp_stat:.3f}, p-value = {bp_p:.4f}")
 
@@ -112,10 +118,14 @@ def run_regression_assumptions_tests(
     print(f"4. 樣本殘差獨立性 (Independence) : Durbin-Watson 統計量 = {dw_stat:.4f} (落於 1.8 ~ 2.2 區間，滿足獨立性)")
 
     # --- 假設 5: 無多重共線性 (No Multicollinearity) ---
-    # 計算各特徵之 VIF (Variance Inflation Factor)
+    # 計算各特徵之 VIF (Variance Inflation Factor，取樣以達秒級計算)
     vif_data = pd.DataFrame()
     vif_data["Feature"] = X_train_sub.columns
-    vif_data["VIF"] = [variance_inflation_factor(X_const.values, i + 1) for i in range(X_train_sub.shape[1])]
+    if len(X_const) > 50000:
+        X_const_vif = X_const.sample(50000, random_state=42).values
+    else:
+        X_const_vif = X_const.values
+    vif_data["VIF"] = [variance_inflation_factor(X_const_vif, i + 1) for i in range(X_train_sub.shape[1])]
     max_vif = vif_data["VIF"].max()
     mean_vif = vif_data["VIF"].mean()
     print(f"5. 無多重共線性 (Multicollinearity): 最大 VIF = {max_vif:.3f}, 平均 VIF = {mean_vif:.3f} (全部遠小於 5.0 門檻)")
@@ -123,18 +133,29 @@ def run_regression_assumptions_tests(
     # --- 繪製出刊級 4-Panel 迴歸診斷圖 ---
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
 
+    # 繪圖取樣 (4000 點) 確保散布圖清爽美觀且 LOWESS 平滑線秒級繪製
+    if len(residuals) > 4000:
+        plot_idx = residuals.sample(4000, random_state=42).index
+        plot_fitted = fitted_vals.loc[plot_idx]
+        plot_resid = residuals.loc[plot_idx]
+        plot_std_resid = std_residuals.loc[plot_idx]
+    else:
+        plot_fitted = fitted_vals
+        plot_resid = residuals
+        plot_std_resid = std_residuals
+
     # 子圖 1: Residuals vs Fitted (線性與零均值檢驗)
     ax1 = axes[0, 0]
-    sns.scatterplot(x=fitted_vals, y=residuals, alpha=0.35, color="#1f77b4", edgecolor="none", s=22, ax=ax1)
+    sns.scatterplot(x=plot_fitted, y=plot_resid, alpha=0.35, color="#1f77b4", edgecolor="none", s=22, ax=ax1)
     ax1.axhline(0, color="#d62728", linestyle="--", linewidth=1.5)
-    sns.regplot(x=fitted_vals, y=residuals, scatter=False, lowess=True, ax=ax1, line_kws={"color": "#2ca02c", "linewidth": 2})
+    sns.regplot(x=plot_fitted, y=plot_resid, scatter=False, lowess=True, ax=ax1, line_kws={"color": "#2ca02c", "linewidth": 2})
     ax1.set_title("1. 線性檢驗: 殘差對預測值散布圖 (Residuals vs Fitted)", fontsize=12, weight="bold")
     ax1.set_xlabel("模型預測值 (Fitted Values)")
     ax1.set_ylabel("殘差 (Residuals)")
 
     # 子圖 2: Normal Q-Q Plot (殘差常態性)
     ax2 = axes[0, 1]
-    stats.probplot(residuals, dist="norm", plot=ax2)
+    stats.probplot(plot_resid, dist="norm", plot=ax2)
     ax2.get_lines()[0].set_markerfacecolor("#1f77b4")
     ax2.get_lines()[0].set_markeredgecolor("none")
     ax2.get_lines()[0].set_alpha(0.35)
@@ -147,9 +168,9 @@ def run_regression_assumptions_tests(
 
     # 子圖 3: Scale-Location Plot (同變異性檢驗)
     ax3 = axes[1, 0]
-    sqrt_abs_std_res = np.sqrt(np.abs(std_residuals))
-    sns.scatterplot(x=fitted_vals, y=sqrt_abs_std_res, alpha=0.35, color="#9467bd", edgecolor="none", s=22, ax=ax3)
-    sns.regplot(x=fitted_vals, y=sqrt_abs_std_res, scatter=False, lowess=True, ax=ax3, line_kws={"color": "#d62728", "linewidth": 2})
+    sqrt_abs_std_res = np.sqrt(np.abs(plot_std_resid))
+    sns.scatterplot(x=plot_fitted, y=sqrt_abs_std_res, alpha=0.35, color="#9467bd", edgecolor="none", s=22, ax=ax3)
+    sns.regplot(x=plot_fitted, y=sqrt_abs_std_res, scatter=False, lowess=True, ax=ax3, line_kws={"color": "#d62728", "linewidth": 2})
     ax3.set_title("3. 同變異性檢驗: 尺度位置圖 (Scale-Location Plot)", fontsize=12, weight="bold")
     ax3.set_xlabel("模型預測值 (Fitted Values)")
     ax3.set_ylabel(r"$\sqrt{|\mathrm{Std.\ Residuals}|}$")
@@ -225,8 +246,13 @@ def plot_actual_vs_predicted_intervals(
     # 開始繪圖
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    # 散布點
-    ax.scatter(y_pred, y_test_arr, alpha=0.38, color="#1b4965", s=25, edgecolors="none", label="測試集預測樣本 (Test Observations)")
+    # 散布點 (大樣本時抽樣 4000 點以確保畫質通透高雅且不會產生巨大重疊斑塊)
+    if len(y_pred) > 4000:
+        np.random.seed(42)
+        scatter_idx = np.random.choice(len(y_pred), size=4000, replace=False)
+        ax.scatter(y_pred[scatter_idx], y_test_arr[scatter_idx], alpha=0.38, color="#1b4965", s=25, edgecolors="none", label="測試集預測樣本 (Test Observations, 抽樣展示)")
+    else:
+        ax.scatter(y_pred, y_test_arr, alpha=0.38, color="#1b4965", s=25, edgecolors="none", label="測試集預測樣本 (Test Observations)")
 
     # 45 度理想線 (Perfect Fit Line)
     lims = [min(min(y_pred), min(y_test_arr)) - 0.02, max(max(y_pred), max(y_test_arr)) + 0.02]

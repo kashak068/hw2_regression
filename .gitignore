@@ -16,6 +16,7 @@ ENV/
 # Data files (Kaggle datasets are large and should not be committed to Git)
 data/*.csv
 data/*.zip
+data_official/
 *.csv
 
 # Model persistence & binary weights

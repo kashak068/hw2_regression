@@ -70,6 +70,11 @@ class FeatureSelectorComparator:
     def method3_sfs(self, X_train: pd.DataFrame, y_train: pd.Series) -> pd.Series:
         """方法 3: Sequential Feature Selector (前向貪婪搜尋 SFS)"""
         base_model = LinearRegression()
+        if len(X_train) > 30000:
+            sample_idx = X_train.sample(30000, random_state=self.random_state).index
+            X_sub, y_sub = X_train.loc[sample_idx], y_train.loc[sample_idx]
+        else:
+            X_sub, y_sub = X_train, y_train
         sfs = SequentialFeatureSelector(
             estimator=base_model,
             n_features_to_select=self.k_features,
@@ -77,7 +82,7 @@ class FeatureSelectorComparator:
             cv=3,
             n_jobs=-1
         )
-        sfs.fit(X_train, y_train)
+        sfs.fit(X_sub, y_sub)
         support = pd.Series(sfs.get_support().astype(int), index=self.feature_names, name="SFS_Selected")
         return support
 
@@ -92,8 +97,13 @@ class FeatureSelectorComparator:
         """方法 5: Permutation Importance (排列重要性)"""
         model = Ridge(alpha=1.0, random_state=self.random_state)
         model.fit(X_train, y_train)
+        if len(X_train) > 50000:
+            sample_idx = X_train.sample(50000, random_state=self.random_state).index
+            X_sub, y_sub = X_train.loc[sample_idx], y_train.loc[sample_idx]
+        else:
+            X_sub, y_sub = X_train, y_train
         perm = permutation_importance(
-            model, X_train, y_train,
+            model, X_sub, y_sub,
             n_repeats=5,
             random_state=self.random_state,
             scoring="r2",
