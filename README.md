@@ -6,6 +6,9 @@
 [![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)]()
 
 live-demo https://hw2-regression-dun.vercel.app/
+
+<img width="1794" height="2867" alt="image" src="https://github.com/user-attachments/assets/22df6bee-b49a-4c7e-ac43-72f54457ebd9" />
+
 > 本專案為資料科學與物聯網/環境數據分析專題，採用業界標準 **CRISP-DM（跨行業資料採礦標準流程）** 六大生命週期階段，針對 Kaggle 競賽 [Predict the Flood Probability](https://www.kaggle.com/competitions/predictheflood/data) 進行高精度連續型洪災機率預測。透過 5 種嚴謹的特徵選擇技術消除雜訊與多重共線性，並對線性迴歸模型進行完整嚴密的**統計五大假設檢定**與信賴區間視覺化。
 
 ---
