@@ -19,10 +19,40 @@
   - [Phase 4: Modeling & Feature Selection (模型建構與特徵選擇)](#phase-4-modeling--feature-selection-模型建構與特徵選擇)
   - [Phase 5: Model Evaluation & Statistical Diagnostics (模型評估與假設檢定)](#phase-5-model-evaluation--statistical-diagnostics-模型評估與假設檢定)
   - [Phase 6: Deployment & Kaggle Summary (模型部署與成果展現)](#phase-6-deployment--kaggle-summary-模型部署與成果展現)
+- [⭐ 加分功能實作 (Bonus Features)](#-加分功能實作-bonus-features)
+  - [加總分 1分：下拉視窗呈現兩種 Problem](#加總分-1分下拉視窗呈現兩種-problem)
+  - [加總分 2分：可任意輸入 Dataset 自動建模](#加總分-2分可任意輸入-dataset-自動建模)
 - [專案目錄結構](#-專案目錄結構)
 - [環境安裝與快速開始](#-環境安裝與快速開始)
 - [核心技術與評估指標](#-核心技術與評估指標)
 - [授權與聯絡資訊](#-授權與聯絡資訊)
+
+---
+
+## ⭐ 加分功能實作 (Bonus Features)
+
+本探索平台已完整實現作業指定之兩項加分指標：
+
+### 🎯 加總分 1分：下拉視窗呈現兩種 Problem
+- **下拉選單 (`#problemSelect`)** 提供切換：
+  1. `🌊 Problem 1`: **洪災機率預測 (Flood Probability)** — Kaggle 111 萬筆、20 項水文環境指標連續型迴歸預測（最佳簡約甜點 $k=15$，$R^2=0.699$）。
+  2. `🚀 Problem 2`: **新創公司利潤預測 (50 Startups Profit)** — 經典 50 家新創公司以研發支出 (R&D Spend)、行銷費用 (Marketing Spend)、行政支出 (Administration) 與州別虛擬變數預測公司淨利潤（最佳簡約甜點 $k=2$，$R^2=0.9505$）。
+  3. `🌐 Problem 3`: **自訂動態資料集 (Custom Dataset)**。
+- 切換時**頁面所有元件無縫連動**：標題、簡介、特徵規模 $k$ 按鈕、ANOVA 係數與 VIF 檢定表、回歸方程式、Chart.js 特徵趨勢圖、測試集殘差與離群值表，以及**右側即時特徵滑桿敏感度試算器**。
+
+### 🚀 加總分 2分：可任意輸入 Dataset 自動建模
+- **任意 CSV 網址即時載入**：
+  - 輸入框支援貼上任何公開 CSV 網址（例如：`https://raw.githubusercontent.com/Avik-Jain/100-Days-Of-ML-Code/master/datasets/50_Startups.csv`）。
+  - 提供快速點擊按鈕：`🚀 50_Startups.csv (題目範例網址)` 與 `🌊 Flood Probability (樣本資料 5k)`。
+- **支援本機 CSV 檔案上傳**：
+  - 提供檔案選取器（`<input type="file" accept=".csv">`），在離線或無跨域權限環境下依然能上傳任何 CSV 檔案即時運算。
+- **純瀏覽器前端即時 OLS 與特徵選擇引擎**：
+  - 自動偵測數值型特徵與類別型變數（自動進行 One-Hot Encoding）。
+  - 自動判斷目標變數 $y$（亦提供下拉選單供手動指定目標欄位）。
+  - 採用**高斯-若爾當消去法 (Gauss-Jordan Elimination)** 求解正規方程式 $\beta = (X^T X + \lambda I)^{-1} X^T y$。
+  - 即時計算 $R^2$、調整後 $R^2$、RMSE、MAE、$F$ 檢定量、$p$ 值、係數標準誤 $\text{SE}(\beta)$、95% 信賴區間與 VIF 共線性指標。
+  - 自動產生 Top-6 關鍵特徵的即時敏感度滑桿，即時推算新樣本預測值！
+
 
 ---
 

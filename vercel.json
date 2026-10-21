@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "name": "iot-hw2-regression",
+  "cleanUrls": true,
+  "framework": null,
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
