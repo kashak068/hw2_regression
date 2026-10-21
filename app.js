@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { text: '📁 Kaggle Flood Prediction (1.11M Samples)' },
         { text: '⚡ 5 Selection Methods' },
         { text: '★ Parsimonious Sweet Spot: k=15 (R² 0.699)', className: 'sweet-spot' },
-        { text: '★ Full Model: k=20 (R² 0.948, RMSE 0.0101)', style: 'background: rgba(59, 130, 246, 0.25); border-color: rgba(96, 165, 250, 0.5); color: #bfdbfe;' }
+        { text: '★ Full Model: k=20 (R² 0.948, RMSE 0.0101)', className: 'full-model' }
       ],
       targetName: 'FloodProbability',
       targetLabel: 'PREDICTED FLOOD PROBABILITY (預測洪災發生機率)',
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { text: '📁 50 Startups Dataset (50 Companies)' },
         { text: '⚡ 5 Selection Methods' },
         { text: '★ Parsimonious Sweet Spot: k=2 (R² 0.9505)', className: 'sweet-spot' },
-        { text: '★ Full Model: k=5 (R² 0.9511, RMSE $9,232)', style: 'background: rgba(59, 130, 246, 0.25); border-color: rgba(96, 165, 250, 0.5); color: #bfdbfe;' }
+        { text: '★ Full Model: k=5 (R² 0.9511, RMSE $9,232)', className: 'full-model' }
       ],
       targetName: 'Profit',
       targetLabel: 'PREDICTED NET PROFIT (預測公司淨利潤 USD $)',
